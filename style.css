@@ -67,39 +67,6 @@ main {
     background-color: #2f2d36;
 }
 
-/* ul li {
-    list-style: none;
-    font-family: "Inter", sans-serif;
-    font-size: 14px;
-    font-weight: 500;
-    color: #dfe0fb;
-    user-select: none;
-    cursor: pointer;
-    position: relative;
-}
-
-ul li::before {
-    content: '';
-    position: absolute;
-    height: 28px;
-    width: 28px;
-    border-radius: 50%;
-    border-color: #84849d;
-    border-style: solid;
-    border-width: 2px;
-    margin: 0px 14px 0px 14px;
-    cursor: pointer;
-}
-
-ul li:checked {
-    text-decoration: line-through;
-    font-family: "Font Awesome 5 Free";
-    font-weight: 900;
-    content: "\f00c";
-    font-size: 50px;
-    color: #dfe0fb;
-} */
-
 input[type="checkbox"] {
     appearance: none;
     -webkit-appearance: none;
@@ -124,6 +91,14 @@ input[type="checkbox"] {
 
 .input[type="checkbox"]:checked ::after {
     display: block;
+    text-decoration: line-through;
+}
+
+.task-title {
+    font-family: "Inter", sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    color: #dfe0fb;
 }
 
 .task-button{

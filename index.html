@@ -4,12 +4,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>To-Do List</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="default.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
         integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
         crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        .completed {
+            text-decoration: line-through;
+        }
+    </style>
 </head>
 
 <body>
@@ -17,45 +22,154 @@
         <p class="heading2">to</p>
         <p class="heading1">do.</p>
     </nav>
-    <!-- <div class="popup">
-        <h2 class="heading-text">Filters</h2>
-        <div class="filter-text">
-            <i class="fa-solid fa-circle-check" style="color: #d3dee3;"></i>
-            Done
-        </div>
-        <div class="filter-text">
-            <i class="fa-solid fa-trash" style="color: #d3dee3;"></i>
-            Delete All
-        </div>
-    </div> -->
     <main>
         <div class="form-card">
             <p class="heading-text">Add Task</p>
             <textarea name="new-task" id="new-task"></textarea>
             <p class="heading-text">Task Priority</p>
             <div class="task-categories">
-                <button class="dangerBtn">Low</button>
-                <button class="secondaryBtn">Medium</button>
-                <button class="primaryBtn">High</button>
+                <button class="dangerBtn priority-btn" data-priority="Low">Low</button>
+                <button class="secondaryBtn priority-btn" data-priority="Medium">Medium</button>
+                <button class="primaryBtn priority-btn" data-priority="High">High</button>
             </div>
+            <p class="heading-text">Task Date</p>
+            <input type="date" id="task-date">
             <div class="submit">
-                <button class="submit-button">Submit</button>
+                <button class="add-button">Add Task</button>
             </div>
         </div>
         <div class="task-list-card">
             <p class="heading-text">Tasks</p>
-            <div class="task-card">
-                <input type="checkbox">
-                <p class="task-title">Task 1</p>
-            </div>
-            <div class="task-card">
-                <input type="checkbox">
-                <p class="task-title">Task 2</p>
-            </div>
+            <div id="task-list"></div>
             <div class="task-button">
-                <button class="add-button">Add Task</button>
+                <button class="delete-all-button">Delete All</button>
             </div>
         </div>
+        <div class="done-list-card">
+            <p class="heading-text">Done</p>
+            <div id="done-list"></div>
+        </div>
     </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const newTaskInput = document.getElementById('new-task');
+            const addButton = document.querySelector('.add-button');
+            const taskList = document.getElementById('task-list');
+            const doneList = document.getElementById('done-list');
+            const deleteAllButton = document.querySelector('.delete-all-button');
+            const priorityButtons = document.querySelectorAll('.priority-btn');
+            const taskDateInput = document.getElementById('task-date');
+
+            let selectedPriority = 'Low';
+
+            priorityButtons.forEach(button => {
+                button.addEventListener('click', function () {
+                    selectedPriority = this.getAttribute('data-priority');
+                });
+            });
+
+            function saveTasksToLocalStorage() {
+                const tasks = [];
+                taskList.querySelectorAll('.task-card').forEach(taskCard => {
+                    tasks.push({
+                        text: taskCard.querySelector('.task-title').textContent,
+                        priority: taskCard.dataset.priority,
+                        date: taskCard.dataset.date,
+                        completed: taskCard.querySelector('input[type="checkbox"]').checked
+                    });
+                });
+
+                doneList.querySelectorAll('.task-card').forEach(taskCard => {
+                    tasks.push({
+                        text: taskCard.querySelector('.task-title').textContent,
+                        priority: taskCard.dataset.priority,
+                        date: taskCard.dataset.date,
+                        completed: taskCard.querySelector('input[type="checkbox"]').checked
+                    });
+                });
+
+                localStorage.setItem('tasks', JSON.stringify(tasks));
+            }
+
+            function loadTasksFromLocalStorage() {
+                const tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+
+                tasks.forEach(task => {
+                    const taskItem = createTaskElement(task.text, task.priority, task.date, task.completed);
+                    if (task.completed) {
+                        doneList.appendChild(taskItem);
+                    } else {
+                        taskList.appendChild(taskItem);
+                    }
+                });
+            }
+
+            addButton.addEventListener('click', function () {
+                const taskText = newTaskInput.value.trim();
+                const taskDate = taskDateInput.value;
+
+                if (taskText !== '' && taskDate !== '') {
+                    const taskItem = createTaskElement(taskText, selectedPriority, taskDate, false);
+                    taskList.appendChild(taskItem);
+                    newTaskInput.value = '';
+                    taskDateInput.value = '';
+                    saveTasksToLocalStorage();
+                }
+            });
+
+            function createTaskElement(taskText, priority, date, completed) {
+                const taskDiv = document.createElement('div');
+                taskDiv.className = 'task-card';
+                taskDiv.dataset.priority = priority;
+                taskDiv.dataset.date = date;
+
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.checked = completed;
+                checkbox.addEventListener('change', function () {
+                    if (checkbox.checked) {
+                        taskTitle.classList.add('completed');
+                        moveTaskToDone(taskDiv);
+                    } else {
+                        taskTitle.classList.remove('completed');
+                        moveTaskBackToTodoList(taskDiv);
+                    }
+                    saveTasksToLocalStorage();
+                });
+
+                const taskTitle = document.createElement('p');
+                taskTitle.className = 'task-title';
+                taskTitle.textContent = `${taskText} (Priority: ${priority}, Date: ${date})`;
+                if (completed) {
+                    taskTitle.classList.add('completed');
+                }
+
+                taskDiv.appendChild(checkbox);
+                taskDiv.appendChild(taskTitle);
+
+                return taskDiv;
+            }
+
+            function moveTaskToDone(taskDiv) {
+                taskDiv.remove();
+                doneList.appendChild(taskDiv);
+            }
+
+            function moveTaskBackToTodoList(taskDiv) {
+                taskDiv.remove();
+                taskList.appendChild(taskDiv);
+            }
+
+            deleteAllButton.addEventListener('click', function () {
+                taskList.innerHTML = '';
+                doneList.innerHTML = '';
+                saveTasksToLocalStorage();
+            });
+
+            loadTasksFromLocalStorage();
+        });
+    </script>
 </body>
+
 </html>
